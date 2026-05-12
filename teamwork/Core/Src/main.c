@@ -109,19 +109,6 @@ int main(void)
   LED_Init(&user_led[5],GPIOA,GPIO_PIN_6, 0);
   Key_Init(&key_1 ,GPIOA ,GPIO_PIN_0);
 
-
-  time_counyer = 0;
-
-
-
-
-  // if (VL6180_Init() != VL6180_OK) {
-  //   // 初始化失败
-  //   // Initialization failed.
-  //   while(1);
-  // }
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
