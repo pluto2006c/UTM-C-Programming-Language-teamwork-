@@ -45,11 +45,17 @@ void initialise_monitor_handles()
 {
 }
 
+/**
+ * @brief 获取进程 ID / Get process ID
+*/
 int _getpid(void)
 {
   return 1;
 }
 
+/**
+ * @brief 向进程发送信号 / Send signal to a process
+*/
 int _kill(int pid, int sig)
 {
   (void)pid;
@@ -58,6 +64,9 @@ int _kill(int pid, int sig)
   return -1;
 }
 
+/**
+ * @brief 退出程序 / Exit program
+*/
 void _exit (int status)
 {
   _kill(status, -1);
@@ -95,13 +104,18 @@ __attribute__((weak)) int _write(int file, char *ptr, int len)
   return len;
 }
 
+/**
+ * @brief 关闭文件 / Close file
+*/
 int _close(int file)
 {
   (void)file;
   return -1;
 }
 
-
+/**
+ * @brief 获取文件状态 / Get file status
+*/
 int _fstat(int file, struct stat *st)
 {
   (void)file;
@@ -109,12 +123,18 @@ int _fstat(int file, struct stat *st)
   return 0;
 }
 
+/**
+ * @brief 检查是否为终端 / Check if it is a terminal
+*/
 int _isatty(int file)
 {
   (void)file;
   return 1;
 }
 
+/**
+ * @brief 移动文件读写指针 / Reposition read/write file offset
+*/
 int _lseek(int file, int ptr, int dir)
 {
   (void)file;
@@ -123,6 +143,9 @@ int _lseek(int file, int ptr, int dir)
   return 0;
 }
 
+/**
+ * @brief 打开文件 / Open file
+*/
 int _open(char *path, int flags, ...)
 {
   (void)path;
@@ -131,6 +154,9 @@ int _open(char *path, int flags, ...)
   return -1;
 }
 
+/**
+ * @brief 等待子进程结束 / Wait for child process
+*/
 int _wait(int *status)
 {
   (void)status;
@@ -138,6 +164,9 @@ int _wait(int *status)
   return -1;
 }
 
+/**
+ * @brief 删除文件 / Delete file
+*/
 int _unlink(char *name)
 {
   (void)name;
@@ -145,12 +174,18 @@ int _unlink(char *name)
   return -1;
 }
 
+/**
+ * @brief 获取进程时间 / Get process times
+*/
 clock_t _times(struct tms *buf)
 {
   (void)buf;
   return -1;
 }
 
+/**
+ * @brief 获取文件状态 / Get file status
+*/
 int _stat(const char *file, struct stat *st)
 {
   (void)file;
@@ -158,6 +193,9 @@ int _stat(const char *file, struct stat *st)
   return 0;
 }
 
+/**
+ * @brief 创建文件链接 / Create file link
+*/
 int _link(char *old, char *new)
 {
   (void)old;
@@ -166,12 +204,18 @@ int _link(char *old, char *new)
   return -1;
 }
 
+/**
+ * @brief 创建子进程 / Create child process
+*/
 int _fork(void)
 {
   errno = EAGAIN;
   return -1;
 }
 
+/**
+ * @brief 执行文件 / Execute file
+*/
 int _execve(char *name, char **argv, char **env)
 {
   (void)name;

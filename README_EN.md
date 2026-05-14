@@ -4,10 +4,11 @@ A door-state sensing example project based on `STM32F103`. This project uses an 
 
 ## Features
 
-- **Ultrasonic Ranging**: Communicates with the sensor using the I2C1 interface.
+- **Ultrasonic Ranging**: High-precision distance detection based on timer capture.
 - **LED Indication**: Integrated 6 user LEDs and 1 white LED for status display.
 - **Key Recognition**: Implements key debouncing and multiple-press recognition.
 - **Periodic Tasks**: Handles timing and status updates within the SysTick interrupt.
+- **Mode Switching**: Supports switching operation modes by double-clicking the button twice per second.
 
 ## Project Structure
 

@@ -60,8 +60,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef hdma_i2c1_rx;
-extern DMA_HandleTypeDef hdma_i2c1_tx;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -184,19 +183,17 @@ void PendSV_Handler(void)
 }
 
 /**
-  * @brief This function handles System tick timer. / 处理系统滴答定时器
+  * @brief This function handles System tick timer.
   */
-void SysTick_Handler(void)
-{
+void SysTick_Handler(void) {
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
-    /* 1 ms 软计时器，作为本项目的统一时间基准。 / 1 ms software timer used as the common project time base. */
+  /* 1 ms 软计时器，作为本项目的统一时间基准。 / 1 ms software timer used as the common project time base. */
   if (time_counyer >= 10000000) {
-      time_counyer = 0;
+    time_counyer = 0;
   }else {
-      time_counyer++;
+    time_counyer++;
   }
-
 
   /* 运行期参数:
    * user_length: 报警距离阈值，单位 mm
@@ -207,10 +204,11 @@ void SysTick_Handler(void)
    * user_time:   timeout alarm threshold in ms
    * key_mode:    accumulated key press duration for long-press detection
    */
-  static uint8_t user_length = 10;
+  static uint8_t user_length = 2;
   static uint32_t user_time = 30000;
   static uint32_t key_mode = 0;
-  static uint8_t led_flash_turn = 0;
+  static uint32_t open_time = 0;
+  static uint8_t door_State = 0;
 
   /* 使用状态机切换工作模式，避免按键逻辑相互干扰。 */
   /* Use a state machine to switch modes and keep key logic isolated. */
@@ -302,15 +300,25 @@ void SysTick_Handler(void)
     }
 
     if (key_mode % 1000 == 0) {
-
+      user_length = user_hc_sr04.length;
     }
+  }
 
-    if (0 && time_counyer % 500 == 0) {
-      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_7,GPIO_PIN_RESET);
-    }else {
-      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_7,GPIO_PIN_SET);
+  if (user_hc_sr04.length > user_length ) {
+    if (door_State == 0) {
+      open_time = time_counyer;
     }
-
+    door_State = 1;
+    if (time_counyer - open_time > user_time ) {
+      if (time_counyer % 1000 == 500){
+        HAL_GPIO_WritePin(GPIOA,GPIO_PIN_7,GPIO_PIN_RESET);
+      }else if (time_counyer % 1000 == 0) {
+        HAL_GPIO_WritePin(GPIOA,GPIO_PIN_7,GPIO_PIN_SET);
+      }
+    }
+  }else{
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_7,GPIO_PIN_SET);
+    door_State = 0;
   }
 
   for (uint8_t i = 0; i < user_time_mode; i++) {
@@ -334,34 +342,6 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
-
-/**
-  * @brief This function handles DMA1 channel6 global interrupt.
-  */
-void DMA1_Channel6_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Channel6_IRQn 0 */
-
-  /* USER CODE END DMA1_Channel6_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_i2c1_tx);
-  /* USER CODE BEGIN DMA1_Channel6_IRQn 1 */
-
-  /* USER CODE END DMA1_Channel6_IRQn 1 */
-}
-
-/**
-  * @brief This function handles DMA1 channel7 global interrupt.
-  */
-void DMA1_Channel7_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Channel7_IRQn 0 */
-
-  /* USER CODE END DMA1_Channel7_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_i2c1_rx);
-  /* USER CODE BEGIN DMA1_Channel7_IRQn 1 */
-
-  /* USER CODE END DMA1_Channel7_IRQn 1 */
-}
 
 /* USER CODE BEGIN 1 */
 

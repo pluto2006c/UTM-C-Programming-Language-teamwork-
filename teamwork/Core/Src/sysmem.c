@@ -32,7 +32,7 @@ static uint8_t *__sbrk_heap_end = NULL;
 
 /**
  * @brief _sbrk() allocates memory to the newlib heap and is used by malloc
- *        and others from the C library
+ *        and others from the C library / _sbrk() 为 newlib 堆分配内存，供 malloc 等 C 库函数使用
  *
  * @verbatim
  * ############################################################################
@@ -48,25 +48,25 @@ static uint8_t *__sbrk_heap_end = NULL;
  * NOTE: If the MSP stack, at any point during execution, grows larger than the
  * reserved size, please increase the '_Min_Stack_Size'.
  *
- * @param incr Memory size
- * @return Pointer to allocated memory
+ * @param incr Memory size / 内存大小
+ * @return Pointer to allocated memory / 指向已分配内存的指针
  */
 void *_sbrk(ptrdiff_t incr)
 {
-  extern uint8_t _end; /* Symbol defined in the linker script */
-  extern uint8_t _estack; /* Symbol defined in the linker script */
-  extern uint32_t _Min_Stack_Size; /* Symbol defined in the linker script */
+  extern uint8_t _end; /* Symbol defined in the linker script / 链接脚本中定义的符号 */
+  extern uint8_t _estack; /* Symbol defined in the linker script / 链接脚本中定义的符号 */
+  extern uint32_t _Min_Stack_Size; /* Symbol defined in the linker script / 链接脚本中定义的符号 */
   const uint32_t stack_limit = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
   const uint8_t *max_heap = (uint8_t *)stack_limit;
   uint8_t *prev_heap_end;
 
-  /* Initialize heap end at first call */
+  /* Initialize heap end at first call / 首次调用时初始化堆末尾 */
   if (NULL == __sbrk_heap_end)
   {
     __sbrk_heap_end = &_end;
   }
 
-  /* Protect heap from growing into the reserved MSP stack */
+  /* Protect heap from growing into the reserved MSP stack / 防止堆增长到保留的 MSP 栈中 */
   if (__sbrk_heap_end + incr > max_heap)
   {
     errno = ENOMEM;
