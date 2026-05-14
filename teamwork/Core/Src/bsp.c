@@ -6,6 +6,7 @@
 /* LED initialization storage ------------------------------------*/
 LED_DRIVES user_led[6] = {0};
 LED_DRIVES white_led = {0};
+HC_SR04_Drives  user_hc_sr04 = {0};
 
 //初始化全局计时器
 // Initialize the global time counter.
@@ -69,6 +70,64 @@ uint8_t Keystroke_Recognition (Keystroke_Recognition_data* key, uint8_t num ) {
     }else {
         return 0;
     }
+}
 
+/**
+ * @brief 初始化超声波测距仪 / Initialize the ultrasonic rangefinder
+ * @param hc_sr04     驱动结构体指针 / Pointer to the driver structure
+ * @param tim         定时器句柄 / Timer handle
+ * @param outGPIOx    Trig 端口 / Trig port
+ * @param outGPIO_Pin Trig 引脚 / Trig pin
+ * @param inGPIOx     Echo 端口 / Echo port
+ * @param inGPIO_Pin  Echo 引脚 / Echo pin
+*/
+void HC_SR04_INIT(HC_SR04_Drives* hc_sr04, TIM_HandleTypeDef* tim , GPIO_TypeDef* outGPIOx, uint16_t outGPIO_Pin , GPIO_TypeDef* inGPIOx, uint16_t inGPIO_Pin) {
+    hc_sr04->tim = tim ;
+    hc_sr04->outGPIOx = outGPIOx ;
+    hc_sr04->outGPIO_Pin = outGPIO_Pin ;
+    hc_sr04->inGPIOx = inGPIOx ;
+    hc_sr04->inGPIO_Pin = inGPIO_Pin ;
+    hc_sr04->run_mode = 0; /* 运行模式初始化为 0 / Run mode initialized to 0 */
+}
+
+/**
+ * @brief 获取测量距离 / Get measured distance
+ * @param hc_sr04 驱动结构体指针 / Pointer to the driver structure
+*/
+void HC_SR04_getlength(HC_SR04_Drives* hc_sr04 ) {
+
+    /* 触发测量 / Trigger measurement */
+    if (hc_sr04->run_mode == 0) {
+        HAL_GPIO_WritePin(hc_sr04->outGPIOx,hc_sr04->outGPIO_Pin,GPIO_PIN_SET);
+        hc_sr04->run_mode = 1;
+        hc_sr04->tem_time_flash = time_counyer;
+    }
+
+    /* 维持 Trig 高电平 10us 以上 / Keep Trig high for at least 10us */
+    if (hc_sr04->run_mode == 1 && hc_sr04->tem_time_flash - time_counyer > 1000) {
+        HAL_GPIO_WritePin(hc_sr04->outGPIOx,hc_sr04->outGPIO_Pin,GPIO_PIN_RESET);
+        __HAL_TIM_SET_COUNTER(hc_sr04->tim, 0);
+        hc_sr04->run_mode = 2;
+    }
+
+    /* 等待 Echo 高电平并开始计时 / Wait for Echo high and start timer */
+    if (hc_sr04->run_mode == 2 && HAL_GPIO_ReadPin(hc_sr04->inGPIOx,hc_sr04->inGPIO_Pin) == GPIO_PIN_SET) {
+        __HAL_TIM_ENABLE(hc_sr04->tim);
+        hc_sr04->run_mode = 3;
+    }
+
+    /* 等待 Echo 低电平并停止计时 / Wait for Echo low and stop timer */
+    if (hc_sr04->run_mode == 3 && HAL_GPIO_ReadPin(hc_sr04->inGPIOx,hc_sr04->inGPIO_Pin) == GPIO_PIN_RESET) {
+        __HAL_TIM_DISABLE(hc_sr04->tim);
+        hc_sr04->length = __HAL_TIM_GET_COUNTER(hc_sr04->tim) * 0.17 ; /* 换算成距离 (mm) / Convert to distance (mm) */
+        hc_sr04->run_mode = 0;
+    }
+
+    /* 超时处理 / Timeout handling */
+    if (__HAL_TIM_GET_COUNTER(hc_sr04->tim) > 23300 && hc_sr04->run_mode == 3) {
+        __HAL_TIM_DISABLE(hc_sr04->tim);
+        hc_sr04->length = 400;
+        hc_sr04->run_mode = 0;
+    }
 }
 

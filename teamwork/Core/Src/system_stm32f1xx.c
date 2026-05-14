@@ -165,7 +165,7 @@ const uint8_t APBPrescTable[8U] =  {0, 0, 0, 0, 1, 2, 3, 4};
   */
 
 /**
-  * @brief  Setup the microcontroller system
+  * @brief  Setup the microcontroller system. / 初始化微控制器系统
   *         Initialize the Embedded Flash Interface, the PLL and update the 
   *         SystemCoreClock variable.
   * @note   This function should be used only after reset.
@@ -174,12 +174,56 @@ const uint8_t APBPrescTable[8U] =  {0, 0, 0, 0, 1, 2, 3, 4};
   */
 void SystemInit (void)
 {
-#if defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F101xG) || defined(STM32F103xE) || defined(STM32F103xG)
+  /* FPU settings / FPU 设置 ------------------------------------------------------------*/
+  #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+    SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
+  #endif
+
+  /* Reset the RCC clock configuration to the default reset state / 将 RCC 时钟配置重置为默认状态 ------------*/
+  /* Set HSION bit */
+  RCC->CR |= (uint32_t)0x00000001;
+
+  /* Reset SW, HPRE, PPRE1, PPRE2, ADCPRE and MCO bits */
+#ifndef STM32F10X_CL
+  RCC->CFGR &= (uint32_t)0xF8FF0000;
+#else
+  RCC->CFGR &= (uint32_t)0xF0FF0000;
+#endif /* STM32F10X_CL */   
+  
+  /* Reset HSEON, CSSON and PLLON bits */
+  RCC->CR &= (uint32_t)0xFEF6FFFF;
+
+  /* Reset HSEBYP bit */
+  RCC->CR &= (uint32_t)0xFFFBFFFF;
+
+  /* Reset PLLSRC, PLLXTPRE, PLLMUL and USBPRE/OTGFSPRE bits */
+  RCC->CFGR &= (uint32_t)0xFF80FFFF;
+
+#ifdef STM32F10X_CL
+  /* Reset PLL2ON and PLL3ON bits */
+  RCC->CR &= (uint32_t)0xEBFFFFFF;
+
+  /* Disable all interrupts and clear pending bits  */
+  RCC->CIR = 0x00FF0000;
+
+  /* Reset CFGR2 register */
+  RCC->CFGR2 = 0x00000000;
+#elif defined (STM32F10X_LD_VL) || defined (STM32F10X_MD_VL) || (defined STM32F10X_HD_VL)
+  /* Disable all interrupts and clear pending bits  */
+  RCC->CIR = 0x009F0000;
+
+  /* Reset CFGR2 register */
+  RCC->CFGR2 = 0x00000000;      
+#else
+  /* Disable all interrupts and clear pending bits  */
+  RCC->CIR = 0x009F0000;
+#endif /* STM32F10X_CL */
+
+#if defined (STM32F10X_HD) || (defined STM32F10X_XL) || (defined STM32F10X_HD_VL)
   #ifdef DATA_IN_ExtSRAM
     SystemInit_ExtMemCtl(); 
   #endif /* DATA_IN_ExtSRAM */
 #endif 
-
   /* Configure the Vector Table location -------------------------------------*/
 #if defined(USER_VECT_TAB_ADDRESS)
   SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM. */
@@ -187,7 +231,7 @@ void SystemInit (void)
 }
 
 /**
-  * @brief  Update SystemCoreClock variable according to Clock Register Values.
+  * @brief  Update SystemCoreClock variable according to Clock Register Values. / 根据时钟寄存器值更新 SystemCoreClock 变量
   *         The SystemCoreClock variable contains the core clock (HCLK), it can
   *         be used by the user application to setup the SysTick timer or configure
   *         other parameters.
@@ -195,17 +239,17 @@ void SystemInit (void)
   * @note   Each time the core clock (HCLK) changes, this function must be called
   *         to update SystemCoreClock variable value. Otherwise, any configuration
   *         based on this variable will be incorrect.         
-  *     
+  *
   * @note   - The system frequency computed by this function is not the real 
-  *           frequency in the chip. It is calculated based on the predefined 
-  *           constant and the selected clock source:
+  *           frequency in the chip. It is based on the predefined constant and 
+  *           the selected clock source:
   *             
   *           - If SYSCLK source is HSI, SystemCoreClock will contain the HSI_VALUE(*)
   *                                              
   *           - If SYSCLK source is HSE, SystemCoreClock will contain the HSE_VALUE(**)
   *                          
   *           - If SYSCLK source is PLL, SystemCoreClock will contain the HSE_VALUE(**) 
-  *             or HSI_VALUE(*) multiplied by the PLL factors.
+  *             or HSI_VALUE(*) multiplied/divided by the PLL factors.
   *         
   *         (*) HSI_VALUE is a constant defined in stm32f1xx.h file (default value
   *             8 MHz) but the real value may vary depending on the variations
@@ -216,8 +260,9 @@ void SystemInit (void)
   *              that HSE_VALUE is same as the real frequency of the crystal used.
   *              Otherwise, this function may have wrong result.
   *                
-  *         - The result of this function could be not correct when using fractional
-  *           value for HSE crystal.
+  *         - The result of this function will be the value of the system clock (SYSCLK)
+  *           divided by HPRE prescaler.
+  *
   * @param  None
   * @retval None
   */

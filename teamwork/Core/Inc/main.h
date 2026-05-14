@@ -50,9 +50,6 @@ extern "C" {
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
-/**
- * @brief 错误处理函数 / Error handler function
-*/
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
