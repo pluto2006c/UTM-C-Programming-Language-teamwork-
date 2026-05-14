@@ -124,7 +124,7 @@ void HC_SR04_getlength(HC_SR04_Drives* hc_sr04 ) {
     }
 
     /* 超时处理 / Timeout handling */
-    if (__HAL_TIM_GET_COUNTER(hc_sr04->tim) > 23300 && hc_sr04->run_mode == 3) {
+    if (__HAL_TIM_GET_COUNTER(hc_sr04->tim) > 23300 && (hc_sr04->run_mode == 3 || hc_sr04->run_mode == 2)) {
         __HAL_TIM_DISABLE(hc_sr04->tim);
         hc_sr04->length = 400;
         hc_sr04->run_mode = 0;

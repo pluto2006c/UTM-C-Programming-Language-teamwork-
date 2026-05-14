@@ -30,7 +30,7 @@
 
 /* ########################## Module Selection ############################## */
 /**
-  * @brief This is the list of modules to be used in the HAL driver / HAL 驱动中使用的模块列表
+  * @brief This is the list of modules to be used in the HAL driver
   */
 
 #define HAL_MODULE_ENABLED
@@ -79,26 +79,25 @@
 
 /* ########################## Oscillator Values adaptation ####################*/
 /**
-  * @brief Adjust the value of External High Speed oscillator (HSE) used in your application. / 调整应用中使用的外部高速振荡器 (HSE) 的值
+  * @brief Adjust the value of External High Speed oscillator (HSE) used in your application.
   *        This value is used by the RCC HAL module to compute the system frequency
   *        (when HSE is used as system clock source, directly or through the PLL).
   */
 #if !defined  (HSE_VALUE)
-  #define HSE_VALUE    8000000U /*!< Value of the External oscillator in Hz / 外部振荡器频率 (Hz) */
+  #define HSE_VALUE    8000000U /*!< Value of the External oscillator in Hz */
 #endif /* HSE_VALUE */
 
 #if !defined  (HSE_STARTUP_TIMEOUT)
-  #define HSE_STARTUP_TIMEOUT    100U   /*!< Time out for HSE start up, in ms / HSE 启动超时时间 (ms) */
+  #define HSE_STARTUP_TIMEOUT    100U   /*!< Time out for HSE start up, in ms */
 #endif /* HSE_STARTUP_TIMEOUT */
 
 /**
-  * @brief Internal High Speed oscillator (HSI) value. / 内部高速振荡器 (HSI) 的值
+  * @brief Internal High Speed oscillator (HSI) value.
   *        This value is used by the RCC HAL module to compute the system frequency
   *        (when HSI is used as system clock source, directly or through the PLL).
   */
 #if !defined  (HSI_VALUE)
-  #define HSI_VALUE    8000000U /*!< Value of the Internal oscillator in Hz / 内部振荡器频率 (Hz) */
-#endif /* HSI_VALUE */
+  #define HSI_VALUE    8000000U /*!< Value of the Internal oscillator in Hz*/
 #endif /* HSI_VALUE */
 
 /**
