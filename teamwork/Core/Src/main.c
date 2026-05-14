@@ -116,6 +116,7 @@ int main(void)
     /* 无限循环 / Infinite loop */
     HC_SR04_getlength(&user_hc_sr04);
     /* USER CODE END WHILE */
+    HC_SR04_getlength(&user_hc_sr04);
 
     /* USER CODE BEGIN 3 */
   }
