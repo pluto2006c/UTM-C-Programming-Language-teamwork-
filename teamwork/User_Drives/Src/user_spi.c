@@ -36,6 +36,7 @@ void SPI_Queue_Init(SPI_QUEUE* queue) {
         queue->user_spi_queue_members[i].data_size = 0;
     }
     queue->queue_write_num = 0;
+    queue->queue_read_num = 0;
 }
 
 void SPI_Queue_Push(SPI_QUEUE* queue, uint8_t* data ,uint8_t size){
@@ -66,11 +67,11 @@ uint8_t SPI_Send(SPI_DRIVES* user_spi, uint8_t* data, uint8_t size) {
     SPI_Queue_Push(&user_spi->queue_tx, data,user_spi->queue_tx.user_spi_queue_members[user_spi->queue_tx.queue_write_num].data_size);
     if (user_spi->queue_tx.user_spi_queue_members[user_spi->queue_tx.queue_read_num].data_ptr != NULL) {
         if (user_spi->status == SPI_IDLE) {
-            user_spi->status = SPI_WORKING;
+            user_spi->status = SPI_TX_WORKING;
             HAL_SPI_Transmit_DMA(user_spi->hspi, user_spi->queue_tx.user_spi_queue_members[user_spi->queue_tx.queue_read_num].data_ptr, user_spi->queue_tx.user_spi_queue_members[user_spi->queue_tx.queue_read_num].data_size);
             return SPI_OK;
         }
-        if (user_spi->status == SPI_WORKING) {
+        if (user_spi->status == SPI_TX_WORKING) {
             return SPI_BUSY;
         }
     }
@@ -78,21 +79,59 @@ uint8_t SPI_Send(SPI_DRIVES* user_spi, uint8_t* data, uint8_t size) {
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
-    for (spi_num = 0; spi_num < SPI_NUM; spi_num++) {
-        if (spi_drives[spi_num]->hspi == hspi) {
-            SPI_Queue_Free(&spi_drives[spi_num]->queue_tx ,spi_drives[spi_num]->queue_tx.queue_read_num);
-            spi_drives[spi_num]->queue_tx.queue_read_num++;
-            if (spi_drives[spi_num]->queue_tx.queue_read_num > SPI_QUEUE_MEMBER_NUM - 1) {
-                spi_drives[spi_num]->queue_tx.queue_read_num = 0;
+    for (uint8_t user_spi_num = 0; user_spi_num < spi_num; user_spi_num++) {
+        if (spi_drives[user_spi_num]->hspi == hspi) {
+            SPI_Queue_Free(&spi_drives[user_spi_num]->queue_tx ,spi_drives[user_spi_num]->queue_tx.queue_read_num);
+            spi_drives[user_spi_num]->queue_tx.queue_read_num++;
+            if (spi_drives[user_spi_num]->queue_tx.queue_read_num > SPI_QUEUE_MEMBER_NUM - 1) {
+                spi_drives[user_spi_num]->queue_tx.queue_read_num = 0;
             }
-            if (spi_drives[spi_num]->callbacks_num > 0) {
-                for (int j = 0; j < spi_drives[spi_num]->callbacks_num; j++) {
-                    spi_drives[spi_num]->callbacks[j](spi_drives[spi_num]);
+            if (spi_drives[user_spi_num]->callbacks_num > 0) {
+                for (int j = 0; j < spi_drives[user_spi_num]->callbacks_num; j++) {
+                    spi_drives[user_spi_num]->callbacks[j](spi_drives[user_spi_num]);
                 }
             }
-            spi_drives[spi_num]->status = SPI_IDLE;
+            spi_drives[user_spi_num]->status = SPI_IDLE;
         }
     }
+}
+
+uint8_t SPI_Data_Get(SPI_DRIVES* user_spi, uint8_t* data, uint8_t size) {
+    if (user_spi->status != SPI_IDLE) {
+        return SPI_BUSY;
+    }
+    user_spi->rx_data.rx_data_ptr = data;
+    user_spi->rx_data.rx_data_size = size;
+    HAL_SPI_Receive_DMA(user_spi->hspi, user_spi->rx_data.rx_data_ptr, user_spi->rx_data.rx_data_size);
+    user_spi->status = SPI_RX_WORKING;
+    return SPI_OK;
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
+    for (uint8_t user_spi_num = 0; user_spi_num < spi_num; user_spi_num++) {
+        if (spi_drives[user_spi_num]->hspi == hspi) {
+            spi_drives[user_spi_num]->status = SPI_IDLE;
+        }
+    }
+}
+
+void User_SPI_Callback_Init(SPI_DRIVES* user_spi, SPI_Callback callback) {
+    if (user_spi->callbacks_num < SPI_CALLBACK_NUM) {
+        user_spi->callbacks[user_spi->callbacks_num] = callback;
+        user_spi->callbacks_num++;
+    }
+}
+
+void User_SPI_QueueHandle() {
+    for (uint8_t user_spi_num = 0; user_spi_num < spi_num; user_spi_num++) {
+        for (uint8_t user_callbacks_num = 0; user_callbacks_num < spi_drives[user_spi_num]->callbacks_num; user_callbacks_num++) {
+             spi_drives[user_spi_num]->callbacks[user_callbacks_num](spi_drives[user_spi_num]);
+        }
+    }
+}
+
+void User_SPI_Peripheral_Init(SPI_DRIVES* user_spi, SPI_HandleTypeDef* hspi) {
+    user_spi->hspi = hspi;
 }
 
 

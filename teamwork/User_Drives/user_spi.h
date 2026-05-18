@@ -20,7 +20,8 @@ typedef enum {
 
 typedef enum {
     SPI_IDLE,
-    SPI_WORKING,
+    SPI_TX_WORKING,
+    SPI_RX_WORKING,
     SPI_QUEUE_VOID,
 }SPI_Status;
 
@@ -35,12 +36,18 @@ typedef struct {
     uint8_t queue_read_num;
 }SPI_QUEUE;
 
+typedef struct {
+    uint8_t* rx_data_ptr;
+    uint8_t rx_data_size;
+}SPI_Rx_Data;
+
 
 typedef struct {
     SPI_HandleTypeDef* hspi;
     SPI_Status status;
     SPI_QUEUE queue_tx;
     uint8_t tx_data_len;
+    SPI_Rx_Data rx_data;
     SPI_Callback callbacks[SPI_CALLBACK_NUM];
     uint8_t callbacks_num;
 } SPI_DRIVES;
